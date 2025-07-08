@@ -76,8 +76,8 @@ void TakeMeasurement(void) {
   acceleration_X = ((float)measured_acceleration_X / 4096.0) - 0.03; 
   acceleration_Y = ((float)measured_acceleration_Y / 4096.0) + 0.01;
   acceleration_Z = ((float)measured_acceleration_Z / 4096.0) + 0.03;
-  angle_roll = atan(acceleration_Y / sqrt(acceleration_X * acceleration_X + acceleration_Z * acceleration_Z)) * 180.0 / 3.14159265358979323846;
-  angle_pitch = atan(-acceleration_X / sqrt(acceleration_Y * acceleration_Y + acceleration_Z * acceleration_Z)) * 180.0 / 3.14159265358979323846;
+  angle_roll = atan(acceleration_Y / sqrt(acceleration_X * acceleration_X + acceleration_Z * acceleration_Z)) * 180.0 / 3.14;
+  angle_pitch = -atan(acceleration_X / sqrt(acceleration_Y * acceleration_Y + acceleration_Z * acceleration_Z)) * 180.0 / 3.14;
 }
 
 void setup() {
