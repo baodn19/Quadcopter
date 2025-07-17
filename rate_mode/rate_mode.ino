@@ -165,7 +165,7 @@ void setup() {
         digitalWrite(5, LOW);
         initial_battery_percentage = default_battery_percentage;
     } else if (voltage < 7.5) {
-        initial_battery_percentage = default_battery_percentage * 35 / 100;
+        initial_battery_percentage = default_battery_percentage * 30 / 100;
     } else {
         digitalWrite(5, LOW);
         initial_battery_percentage = default_battery_percentage * (82 * voltage - 580) / 100;
@@ -173,9 +173,9 @@ void setup() {
 
     // Check if throttle is at minimum
     receiver_input.begin(14);
-    while(receiver_value[2] > 1020 && receiver_value[2] < 1050) {
+    while(receiver_value[2] < 1020 || receiver_value[2] > 1050) {
         ReadReceiver();
-        delay(10);
+        delay(4);
     }
 
     loop_timer = micros();

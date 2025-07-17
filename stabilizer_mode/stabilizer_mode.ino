@@ -59,7 +59,7 @@ Parameters:
 void Kalman1D(float kalman_state, float kalman_uncertainty, float kalman_input, float kalman_measurement) {
   kalman_state += 0.004 * kalman_input; 
   kalman_uncertainty += 0.004 * 0.004 * 4 * 4;
-  float kalman_gain;
+  float kalman_gain = kalman_uncertainty * 1/(1*kalman_uncertainty + 3 * 3);
   kalman_state += kalman_gain * (kalman_measurement - kalman_state);
   kalman_uncertainty = (1 - kalman_gain) * kalman_uncertainty;
 
@@ -208,7 +208,7 @@ void setup() {
   Wire.endTransmission();
 
   // Gyro calibration
-  for (rate_calibration_number = 0; rate_calibration_number < 2000; i++) {
+  for (rate_calibration_number = 0; rate_calibration_number < 2000; rate_calibration_number++) {
       GyroSignal();
       yaw_calibration_rate += yaw_rate;
       pitch_calibration_rate += pitch_rate;
@@ -244,7 +244,7 @@ void setup() {
 
   // Check if throttle is at minimum
   receiver_input.begin(14);
-  while(receiver_value[2] > 1020 && receiver_value[2] < 1050) {
+  while(receiver_value[2] < 1020 || receiver_value[2] > 1050) {
       ReadReceiver();
       delay(10);
   }
