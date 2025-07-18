@@ -1,10 +1,12 @@
+#include <Wire.h>
 // Trimming values for altitude measurement
 uint16_t dig_T1, dig_P1;
 int16_t dig_T2, dig_T3, dig_P2, dig_P3, dig_P4;
 int16_t dig_P5, dig_P6, dig_P7, dig_P8, dig_P9;
 
 // Altitude measurement variables
-float altitude, initial_altitude, rate_calibration_number;
+float altitude, initial_altitude;
+int rate_calibration_number;
 
 void BarometerSignal() {
   // Measure raw data from the barometer
@@ -22,8 +24,8 @@ void BarometerSignal() {
   uint32_t temp_xlsb = Wire.read();
 
   // Construct raw data values
-  adc_T = (temp_msb << 12) | (temp_lsb << 4) | (temp_xlsb >> 4);
-  adc_P = (press_msb << 12) | (press_lsb << 4) | (press_xlsb >> 4);
+  unsigned long int adc_T = (temp_msb << 12) | (temp_lsb << 4) | (temp_xlsb >> 4);
+  unsigned long int adc_P = (press_msb << 12) | (press_lsb << 4) | (press_xlsb >> 4);
 
   // Calculate t_fine
   signed long int var1, var2, t_fine;
@@ -32,6 +34,7 @@ void BarometerSignal() {
   t_fine = var1 + var2;
 
   // Calculate calibrated pressure
+  unsigned long int p;
   var1 = (((signed long int)t_fine) >> 1) - (signed long int)64000;
   var2 = (((var1 >> 2) * (var1 >> 2)) >> 11 ) * ((signed long int)dig_P6);
   var2 = var2 + ((var1 * ((signed long int)dig_P5)) << 1);
@@ -40,9 +43,9 @@ void BarometerSignal() {
   var1 =((((32768 + var1)) * ((signed long int)dig_P1)) >> 15);
   if (var1 == 0)
   {
-  return 0; // avoid exception caused by division by zero
+  p = 0; // avoid exception caused by division by zero
   }
-  unsigned long int p = (((unsigned long int)(((signed long int)1048576) - adc_P) - (var2 >> 12))) * 3125;
+  p = (((unsigned long int)(((signed long int)1048576) - adc_P) - (var2 >> 12))) * 3125;
   if (p < 0x80000000)
   {
   p = (p << 1) / ((unsigned long int)var1);
@@ -56,13 +59,16 @@ void BarometerSignal() {
   p = (unsigned long int)((signed long int)p + ((var1 + var2 + dig_P7) >> 4));
 
   // Calculate altitude based on pressure
-  float pressure = (float)p / 100; // Convert to hPa
+  double pressure = (double)p / 100; // Convert to hPa
   altitude = (1.0 - pow(pressure / 1013.25, 1 / 5.255)) * 44330 * 100; // Altitude in cm
 }
 
 void setup() {
   Serial.begin(57600);
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);
   Wire.setClock(400000); // Set I2C clock speed to 400kHz
+  Wire.begin();
 
   // Mode and oversampling settings
   Wire.beginTransmission(0x76);
@@ -105,7 +111,7 @@ void setup() {
   for (rate_calibration_number = 0; rate_calibration_number < 2000; rate_calibration_number++) {
     BarometerSignal();
     initial_altitude += altitude;
-    delay(4);
+    delay(1);
   }
   initial_altitude /= 2000; // Average the altitude over 2000 readings
 }
@@ -116,5 +122,5 @@ void loop() {
   Serial.print("Altitude: ");
   Serial.print(altitude);
   Serial.println(" cm");
-  delay(100); // Delay for readability
+  delay(50); // Delay for readability
 }
